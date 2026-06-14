@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'JetBrains Mono', monospace;
+
+  /* Catppuccin Frappé */
+  --color-ctp-base: #303446;     
+  --color-ctp-surface: #414559;  
+  --color-ctp-overlay: #737994; 
+  --color-ctp-text: #c6d0f5;    
+  --color-ctp-subtext: #a5adce;  
+  
+  --color-ctp-green: #a6d189;   
+  --color-ctp-blue: #8caaee;   
+  --color-ctp-lavender: #babbf1;
+}
+
+body {
+  background-color: var(--color-ctp-base);
+  color: var(--color-ctp-text);
+}
