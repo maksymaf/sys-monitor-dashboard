@@ -1,0 +1,1 @@
+A self-hosted, real-time server monitoring web application powered by React, Node.js, and WebSockets.
