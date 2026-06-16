@@ -3,9 +3,16 @@ import { io, Socket } from 'socket.io-client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface MetricData {
-  cpu: { usage: number },
-  ram: { total: number, active: number, usage: number },
-  timestamp: number,
+  cpu: { usage: number };
+  ram: { total: number; active: number; usage: number };
+  disks: Array<{
+    fs: string;
+    mount: string;
+    size: number;
+    used: number;
+    use: number;
+  }>;
+  timestamp: number;
 }
 
 export default function App() {
@@ -54,7 +61,7 @@ return (
           Connecting to monitoring agent...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           <div className="bg-ctp-surface p-6 rounded-xl border border-ctp-overlay shadow-xl">
             <h2 className="text-xl font-semibold mb-2 text-ctp-text">CPU Usage</h2>
@@ -100,6 +107,34 @@ return (
                   <Line type="monotone" dataKey="ram.usage" stroke="#8caaee" strokeWidth={2} dot={false} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-ctp-surface p-6 rounded-xl border border-ctp-overlay shadow-xl">
+            <h2 className="text-xl font-semibold mb-4 text-ctp-text">Storage Usage</h2>
+            
+            <div className="space-y-4 max-h-60 overflow-y-auto">
+              {metrics.disks.map((disk, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex justify-between text-xs text-ctp-subtext">
+                    <span className="font-bold truncate max-w-[150px]">{disk.mount} ({disk.fs})</span>
+                    <span>
+                      {(disk.used / 1024 / 1024 / 1024).toFixed(1)} GB / {(disk.size / 1024 / 1024 / 1024).toFixed(1)} GB
+                    </span>
+                  </div>
+                  
+                  <div className="w-full bg-ctp-base rounded-full h-4 overflow-hidden border border-ctp-overlay">
+                    <div 
+                      className="bg-ctp-lavender h-full rounded-full transition-all duration-500"
+                      style={{ width: `${disk.use}%` }}
+                    />
+                  </div>
+                  
+                  <div className="text-right text-xs font-bold text-ctp-lavender">
+                    {disk.use.toFixed(1)}% used
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
