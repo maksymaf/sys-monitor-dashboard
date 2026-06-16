@@ -15,12 +15,44 @@ interface MetricData {
   timestamp: number;
 }
 
+interface SystemInfo {
+  hostname: string;
+  os: string;
+  bootTime: number;
+}
+
 export default function App() {
   const [metrics, setMetrics] = useState<MetricData | null>(null);
   const [history, setHistory] = useState<MetricData[]>([]);
 
+  const [sysInfo, setSysInfo] = useState<SystemInfo | null>(null);
+  const [uptimeText, setUptimeText] = useState<string>('0h 0m 0s');
+
   useEffect(() => {
     const socket : Socket = io('http://localhost:5000');
+
+    socket.on('system-init', (data: SystemInfo) => {
+      setSysInfo(data);
+
+      const uptimeInterval = setInterval(() => {
+        const diff = Date.now() - data.bootTime;
+        
+        console.log('...')
+
+        const seconds = Math.floor((diff / 1000) % 60);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        let text = `${hours}h ${minutes}m ${seconds}s`;
+        if (days > 0) text = `${days}d ` + text;
+        
+        
+        setUptimeText(text);
+      }, 1000);
+
+      socket.on('disconnect', () => clearInterval(uptimeInterval));
+    });
 
     socket.on('metrics-update', (data : MetricData) => {
       setMetrics(data);
@@ -54,6 +86,25 @@ return (
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-ctp-lavender">Metrics Dashboard</h1>
         <p className="text-ctp-subtext text-sm">Real-time metrics of your server</p>
+
+        {sysInfo && (
+          <div className="flex flex-wrap gap-4 text-xs bg-ctp-surface p-3 rounded-lg border border-ctp-overlay mt-8">
+            <div>
+              <span className="text-ctp-subtext font-bold">Host:</span>{' '}
+              <span className="text-ctp-blue font-mono">{sysInfo.hostname}</span>
+            </div>
+            <div className="hidden sm:block text-ctp-overlay">|</div>
+            <div>
+              <span className="text-ctp-subtext font-bold">OS:</span>{' '}
+              <span className="text-ctp-green">{sysInfo.os}</span>
+            </div>
+            <div className="text-ctp-overlay">|</div>
+            <div>
+              <span className="text-ctp-subtext font-bold">Uptime:</span>{' '}
+              <span className="text-ctp-lavender font-mono">{uptimeText}</span>
+            </div>
+          </div>
+        )}
       </header>
 
       {!metrics ? (
@@ -137,6 +188,7 @@ return (
               ))}
             </div>
           </div>
+
         </div>
       )}
     </div>

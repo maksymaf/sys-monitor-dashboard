@@ -19,8 +19,20 @@ const io = new Server(httpServer, {
     }
 });
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     console.log(`Client connected : ${socket.id}`);
+
+    try {
+        const osData = await si.osInfo();
+        
+        socket.emit("system-init", {
+            hostname: osData.hostname,
+            os: `${osData.distro} ${osData.release} (${osData.arch})`,
+            bootTime: Date.now() - (si.time().uptime * 1000)
+        });
+    }catch (error) {
+        console.error("Error while getting system data:", error);
+    }
 
     socket.on('disconnect', () => {
         console.log(`Client disconnected : ${socket.id}`)
