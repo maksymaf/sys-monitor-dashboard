@@ -45,6 +45,7 @@ async function streamMetrics() {
     const cpu = await si.currentLoad();
     const ram = await si.mem();
     const disks = await si.fsSize();
+    const docker = await si.dockerContainers(true);
 
     const mainDisks = disks.filter(disk => disk.mount === '/' || disk.fs.startsWith('/dev/'));
 
@@ -66,12 +67,35 @@ async function streamMetrics() {
             use: disk.use
         })),
 
+        docker: docker.map(container => ({
+            id: container.id,
+            name: container.name,
+            state: container.state,
+            image: container.image
+        })),
+
         timestamp: Date.now()
     };
 
     io.emit('metrics-update', metrics);
 
   } catch (error) {
+
+    console.log("Docker не запущений або немає доступу. Пропускаємо.");
+
+    const cpu = await si.currentLoad();
+    const ram = await si.mem();
+    const disks = await si.fsSize();
+    const mainDisks = disks.filter(disk => disk.mount === '/' || disk.fs.startsWith('/dev/'));
+
+    io.emit("metrics-update", {
+      cpu: { usage: cpu.currentLoad },
+      ram: { total: ram.total, active: ram.active, usage: (ram.active / ram.total) * 100 },
+      disks: mainDisks.map(disk => ({ fs: disk.fs, mount: disk.mount, size: disk.size, used: disk.used, use: disk.use })),
+      docker: [], 
+      timestamp: Date.now()
+    });
+
     console.error("Error getting metrics:", error);
   }
 }

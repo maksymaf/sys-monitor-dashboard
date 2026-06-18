@@ -12,6 +12,15 @@ interface MetricData {
     used: number;
     use: number;
   }>;
+
+  docker: Array<{
+    id: string;
+    name: string;
+    state: string;
+    status: string;
+    image: string;
+  }>;
+
   timestamp: number;
 }
 
@@ -112,7 +121,7 @@ return (
           Connecting to monitoring agent...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           <div className="bg-ctp-surface p-6 rounded-xl border border-ctp-overlay shadow-xl">
             <h2 className="text-xl font-semibold mb-2 text-ctp-text">CPU Usage</h2>
@@ -186,6 +195,52 @@ return (
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="bg-ctp-surface p-6 rounded-xl border border-ctp-overlay shadow-xl flex flex-col">
+            <h2 className="text-xl font-semibold mb-4 text-ctp-text flex items-center gap-2">
+              🐳 Docker Containers 
+              <span className="text-xs bg-ctp-base px-2 py-0.5 rounded-full text-ctp-subtext">
+                {metrics.docker.length} total
+              </span>
+            </h2>
+            
+            <div className="space-y-3 max-h-60 overflow-y-auto flex-1 pr-1">
+              {metrics.docker.length === 0 ? (
+                <div className="text-center py-12 text-ctp-subtext text-sm italic">
+                  No active containers found or Docker is offline.
+                </div>
+              ) : (
+                metrics.docker.map((container) => {
+                  const isRunning = container.state === 'running';
+                  return (
+                    <div 
+                      key={container.id} 
+                      className="bg-ctp-base p-3 rounded-lg border border-ctp-overlay flex items-center justify-between gap-4"
+                    >
+                      <div className="truncate">
+                        <div className="font-bold text-sm text-ctp-lavender truncate">{container.name}</div>
+                        <div className="text-xs text-ctp-subtext truncate">Img: {container.image}</div>
+                        <div className="text-[10px] text-ctp-subtext mt-0.5">{container.status}</div>
+                      </div>
+                      
+                      {/* Круглий кольоровий статус-індикатор */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`text-xs font-mono px-2 py-0.5 rounded text-black font-bold ${isRunning ? 'bg-ctp-green' : 'bg-red-400'}`}>
+                          {container.state.toUpperCase()}
+                        </span>
+                        <span className={`relative flex h-2.5 w-2.5`}>
+                          {isRunning && (
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ctp-green opacity-75"></span>
+                          )}
+                          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isRunning ? 'bg-ctp-green' : 'bg-red-400'}`}></span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
